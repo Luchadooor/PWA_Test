@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splint Analyzer Z.ai</title>
+    <meta name="theme-color" content="#3498db">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Splint Analyzer">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU3BsaW50IEFuYWx5emVyIFouYWkiLCJzaG9ydF9uYW1lIjoiU3BsaW50IEFuYWx5emVyIiwiZGVzY3JpcHRpb24iOiJFeHRyYWN0IGFuZCBhbmFseXplIHRleHQgZnJvbSBpbWFnZXMiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2Y1ZjdmYSIsInRoZW1lX2NvbG9yIjoiIzM0OThkYiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48dGV4dCB5PScuOWVtJyBmb250LXNpemU9JzkwJz7wn46OPC90ZXh0Pjwvc3ZnPiIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn0seyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48dGV4dCB5PScuOWVtJyBmb250LXNpemU9JzkwJz7wn46OPC90ZXh0Pjwvc3ZnPiIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 32px;
+            text-align: center;
+        }
+        .upload-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 2px dashed #3498db;
+            border-radius: 6px;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 15px 0;
+        }
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-input-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .file-input-button:hover {
+            background-color: #2980b9;
+        }
+        .file-list {
+            margin-top: 15px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            display: none;
+        }
+        .file-list-header {
+            padding: 10px 15px;
+            background-color: #f1f1f1;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+        .file-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        .file-name {
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 70%;
+        }
+        .file-date {
+            font-size: 12px;
+            color: #666;
+        }
+        .progress-container {
+            margin: 20px 0;
+            display: none;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        .result-section {
+            margin-top: 25px;
+        }
+        .result-textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            resize: vertical;
+        }
+        .special-result-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 1px solid #2ecc71;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            resize: vertical;
+            background-color: #f8fff8;
+        }
+        .copy-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .copy-button:hover {
+            background-color: #27ae60;
+        }
+        .special-copy-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .special-copy-button:hover {
+            background-color: #8e44ad;
+        }
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+        }
+        .info-box {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+        .clear-button {
+            margin-left: 10px;
+            padding: 8px 16px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .clear-button:hover {
+            background-color: #c0392b;
+        }
+        .special-result-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #2ecc71;
+            border-radius: 6px;
+            background-color: #f8fff8;
+        }
+        .special-result-section h3 {
+            margin-top: 0;
+            color: #27ae60;
+        }
+        .table-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #3498db;
+            border-radius: 6px;
+            background-color: #f0f8ff;
+        }
+        .table-section h3 {
+            margin-top: 0;
+            color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #e6f7ff;
+        }
+        .highlight-row {
+            background-color: #ffffcc !important;
+        }
+        .copy-table-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .copy-table-button:hover {
+            background-color: #2980b9;
+        }
+        .debug-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            display: none;
+        }
+        .hosting-instructions {
+            background-color: #fffde7;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+        .hosting-instructions h3 {
+            margin-top: 0;
+            color: #ff8f00;
+        }
+        .hosting-instructions ol {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        .hosting-instructions li {
+            margin-bottom: 8px;
+        }
+        .hosting-instructions a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .hosting-instructions a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Splint Analyzer Z.ai</h1>
+        
+        <div class="hosting-instructions">
+            <h3>How to install this app on your home screen:</h3>
+            <p>To install this app as a PWA, you need to host it online first. Here's how:</p>
+            <ol>
+                <li>Save this HTML file to your computer</li>
+                <li>Go to <a href="https://pages.github.com/" target="_blank">GitHub Pages</a> or <a href="https://app.netlify.com/drop" target="_blank">Netlify Drop</a></li>
+                <li>Drag and drop the HTML file to upload it</li>
+                <li>Once uploaded, open the URL provided by the service in Chrome on your Android device</li>
+                <li>Tap the menu button (⋮) in Chrome and select "Add to Home screen"</li>
+                <li>Confirm by tapping "Add"</li>
+            </ol>
+            <p>The app will then be available on your home screen!</p>
+        </div>
+        
+        <div class="info-box">
+            <p>This tool extracts text from multiple images using OCR (Optical Character Recognition). Everything is processed locally in your browser - no data is sent to any server.</p>
+            <p>Images will be processed chronologically based on their creation date. Lines that begin with "+" and end with "€" will be extracted and analyzed.</p>
+        </div>
+        
+        <div class="upload-section">
+            <p>Select one or more images to extract text from:</p>
+            <div class="file-input-wrapper">
+                <input type="file" id="imageInput" class="file-input" accept="image/*" multiple>
+                <div class="file-input-button">Choose Images</div>
+            </div>
+            <div id="fileList" class="file-list">
+                <div class="file-list-header">Selected Files:</div>
+            </div>
+        </div>
+        
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-bar">
+                <div id="progressBar" class="progress"></div>
+            </div>
+            <div id="status" class="status">Initializing...</div>
+        </div>
+        
+        <div class="table-section">
+            <h3>Splint Analysis Table</h3>
+            <table id="analysisTable">
+                <thead>
+                    <tr>
+                        <th>Performance</th>
+                        <th>Avg. Price</th>
+                        <th>Market Value</th>
+                        <th>Advantage</th>
+                        <th>Advantage %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be added here dynamically -->
+                </tbody>
+            </table>
+            <button id="copyTableButton" class="copy-table-button">Copy Table Data</button>
+            <div id="debugInfo" class="debug-info"></div>
+        </div>
+        
+        <div class="special-result-section">
+            <h3>Special Lines (starting with "+" and ending with "€")</h3>
+            <textarea id="specialExtractedText" class="special-result-textarea" placeholder="Special lines will appear here..."></textarea>
+            <button id="specialCopyButton" class="special-copy-button">Copy Special Lines</button>
+        </div>
+        
+        <div class="result-section">
+            <label for="extractedText"><strong>Extracted Text:</strong></label>
+            <textarea id="extractedText" class="result-textarea" placeholder="Extracted text will appear here..."></textarea>
+            <div>
+                <button id="copyButton" class="copy-button">Copy to Clipboard</button>
+                <button id="clearButton" class="clear-button">Clear Results</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const imageInput = document.getElementById('imageInput');
+            const fileList = document.getElementById('fileList');
+            const extractedText = document.getElementById('extractedText');
+            const specialExtractedText = document.getElementById('specialExtractedText');
+            const analysisTable = document.getElementById('analysisTable');
+            const tableBody = analysisTable.querySelector('tbody');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const status = document.getElementById('status');
+            const copyButton = document.getElementById('copyButton');
+            const specialCopyButton = document.getElementById('specialCopyButton');
+            const copyTableButton = document.getElementById('copyTableButton');
+            const clearButton = document.getElementById('clearButton');
+            const notification = document.getElementById('notification');
+            const debugInfo = document.getElementById('debugInfo');
+            
+            // Register service worker for PWA
+            if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+                navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
+                    self.addEventListener('install', function(e) {
+                        e.waitUntil(
+                            caches.open('splint-analyzer').then(function(cache) {
+                                return cache.addAll([
+                                    '/',
+                                    'data:text/html,<html><body>Splint Analyzer Z.ai</body></html>'
+                                ]);
+                            })
+                        );
+                    });
+                    
+                    self.addEventListener('fetch', function(e) {
+                        e.respondWith(
+                            caches.match(e.request).then(function(response) {
+                                return response || fetch(e.request);
+                            })
+                        );
+                    });
+                `)).then(() => {
+                    console.log('Service Worker Registered');
+                });
+            }
+            
+            // Listen for install prompt
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+            });
+            
+            // Handle app installed
+            window.addEventListener('appinstalled', () => {
+                console.log('App was installed');
+                showNotification('App installed successfully!');
+            });
+            
+            imageInput.addEventListener('change', handleImageUpload);
+            copyButton.addEventListener('click', copyToClipboard);
+            specialCopyButton.addEventListener('click', copySpecialLines);
+            copyTableButton.addEventListener('click', copyTableData);
+            clearButton.addEventListener('click', clearResults);
+            
+            function handleImageUpload(e) {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                
+                // Sort files by creation date (lastModified is the closest we have)
+                files.sort((a, b) => a.lastModified - b.lastModified);
+                
+                // Display file list
+                displayFileList(files);
+                
+                // Clear previous results
+                extractedText.value = '';
+                specialExtractedText.value = '';
+                tableBody.innerHTML = '';
+                debugInfo.style.display = 'none';
+                
+                // Show progress
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                status.textContent = `Preparing to process ${files.length} file(s)...`;
+                
+                // Process files sequentially
+                processFilesSequentially(files);
+            }
+            
+            function displayFileList(files) {
+                // Clear existing file list except the header
+                const fileItems = fileList.querySelectorAll('.file-item');
+                fileItems.forEach(item => item.remove());
+                
+                // Show the file list
+                fileList.style.display = 'block';
+                
+                // Add each file to the list
+                files.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    
+                    const fileName = document.createElement('div');
+                    fileName.className = 'file-name';
+                    fileName.textContent = file.name;
+                    
+                    const fileDate = document.createElement('div');
+                    fileDate.className = 'file-date';
+                    fileDate.textContent = new Date(file.lastModified).toLocaleString();
+                    
+                    fileItem.appendChild(fileName);
+                    fileItem.appendChild(fileDate);
+                    fileList.appendChild(fileItem);
+                });
+            }
+            
+            async function processFilesSequentially(files) {
+                let allText = '';
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    
+                    // Update status for current file
+                    status.textContent = `Processing file ${i + 1} of ${files.length}: ${file.name}`;
+                    
+                    try {
+                        // Process with Tesseract
+                        const result = await Tesseract.recognize(
+                            file,
+                            'eng', // Language (can be changed to other languages like 'chi_sim' for Chinese)
+                            {
+                                logger: m => {
+                                    if (m.status === 'recognizing text') {
+                                        const progress = Math.round(m.progress * 100);
+                                        progressBar.style.width = `${progress}%`;
+                                        status.textContent = `Processing file ${i + 1} of ${files.length}: ${file.name} (${progress}%)`;
+                                    }
+                                }
+                            }
+                        );
+                        
+                        // Add separator and file name
+                        if (i > 0) {
+                            allText += '\n\n';
+                        }
+                        allText += `--- File: ${file.name} ---\n`;
+                        allText += result.data.text;
+                        
+                        // Update the textarea with current results
+                        extractedText.value = allText;
+                        
+                        // Extract special lines
+                        extractSpecialLines(allText);
+                        
+                    } catch (err) {
+                        console.error('OCR Error:', err);
+                        status.textContent = `Error processing ${file.name}: ${err.message}`;
+                        
+                        // Add error message for this file
+                        if (i > 0) {
+                            allText += '\n\n';
+                        }
+                        allText += `--- File: ${file.name} ---\n`;
+                        allText += `[ERROR: ${err.message}]\n`;
+                        
+                        // Update the textarea with current results
+                        extractedText.value = allText;
+                        
+                        // Extract special lines
+                        extractSpecialLines(allText);
+                    }
+                }
+                
+                // All files processed
+                status.textContent = 'All files processed successfully!';
+                progressBar.style.width = '100%';
+                
+                // Hide progress after a delay
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 2000);
+            }
+            
+            function extractSpecialLines(text) {
+                // Split text by lines
+                const lines = text.split('\n');
+                
+                // Filter lines that start with '+' and end with '€'
+                const specialLines = lines.filter(line => {
+                    // Trim whitespace from both ends
+                    const trimmedLine = line.trim();
+                    return trimmedLine.startsWith('+') && trimmedLine.endsWith('€');
+                });
+                
+                // Join the special lines with newline
+                specialExtractedText.value = specialLines.join('\n');
+                
+                // Generate analysis table
+                generateAnalysisTable(specialLines);
+            }
+            
+            function generateAnalysisTable(lines) {
+                // Clear existing table rows
+                tableBody.innerHTML = '';
+                debugInfo.innerHTML = '';
+                
+                const rowData = [];
+                let debugMessages = [];
+                
+                // Process each line to extract data
+                lines.forEach((line, index) => {
+                    debugMessages.push(`Processing line ${index + 1}: "${line}"`);
+                    
+                    // Extract performance (between '+' and '%')
+                    // More flexible regex to handle different formats
+                    const perfMatch = line.match(/\+([\d.]+)%/);
+                    if (!perfMatch) {
+                        debugMessages.push(`  - No performance match found`);
+                        return;
+                    }
+                    
+                    const performance = parseFloat(perfMatch[1]);
+                    debugMessages.push(`  - Performance: ${performance}`);
+                    
+                    // Extract price (after '%' until '€')
+                    // More flexible regex to handle different formats
+                    const priceMatch = line.match(/([\d.]+)\s*€/);
+                    if (!priceMatch) {
+                        debugMessages.push(`  - No price match found`);
+                        return;
+                    }
+                    
+                    const avgPrice = parseFloat(priceMatch[1]);
+                    debugMessages.push(`  - Avg. Price: ${avgPrice}`);
+                    
+                    // Calculate Market Value: (performance / 2) + 50
+                    const marketValue = (performance / 2) + 50;
+                    debugMessages.push(`  - Market Value: ${marketValue}`);
+                    
+                    // Calculate Advantage: marketValue - avgPrice
+                    const advantage = marketValue - avgPrice;
+                    debugMessages.push(`  - Advantage: ${advantage}`);
+                    
+                    // Calculate Advantage %: (100 / marketValue * avgPrice) - 100
+                    const advantagePercent = (100 / marketValue * avgPrice) - 100;
+                    debugMessages.push(`  - Advantage %: ${advantagePercent}`);
+                    
+                    rowData.push({
+                        performance: performance,
+                        avgPrice: avgPrice,
+                        marketValue: marketValue,
+                        advantage: advantage,
+                        advantagePercent: advantagePercent,
+                        originalLine: line
+                    });
+                });
+                
+                // Display debug info
+                if (rowData.length === 0) {
+                    debugMessages.push('No valid data found for analysis table!');
+                    debugInfo.innerHTML = debugMessages.join('<br>');
+                    debugInfo.style.display = 'block';
+                    showNotification('No valid data found for analysis table!', '#e74c3c');
+                    return;
+                }
+                
+                // Sort by advantagePercent to find the three lowest values
+                const sortedData = [...rowData].sort((a, b) => a.advantagePercent - b.advantagePercent);
+                const lowestThreeIndices = sortedData.slice(0, 3).map(item => rowData.indexOf(item));
+                
+                // Create table rows
+                rowData.forEach((data, index) => {
+                    const row = document.createElement('tr');
+                    
+                    // Check if this row should be highlighted (one of the three lowest advantagePercent)
+                    if (lowestThreeIndices.includes(index)) {
+                        row.classList.add('highlight-row');
+                    }
+                    
+                    // Format the cells with appropriate units and decimal places
+                    row.innerHTML = `
+                        <td>${data.performance}%</td>
+                        <td>${data.avgPrice.toFixed(2)}€</td>
+                        <td>${data.marketValue.toFixed(2)}</td>
+                        <td>${data.advantage.toFixed(2)}</td>
+                        <td>${data.advantagePercent.toFixed(2)}%</td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                // Show debug info
+                debugInfo.innerHTML = debugMessages.join('<br>');
+                debugInfo.style.display = 'block';
+            }
+            
+            function copyToClipboard() {
+                if (!extractedText.value) {
+                    showNotification('No text to copy!', '#e74c3c');
+                    return;
+                }
+                
+                extractedText.select();
+                document.execCommand('copy');
+                showNotification('Text copied to clipboard!');
+            }
+            
+            function copySpecialLines() {
+                if (!specialExtractedText.value) {
+                    showNotification('No special lines to copy!', '#e74c3c');
+                    return;
+                }
+                
+                specialExtractedText.select();
+                document.execCommand('copy');
+                showNotification('Special lines copied to clipboard!');
+            }
+            
+            function copyTableData() {
+                if (tableBody.rows.length === 0) {
+                    showNotification('No table data to copy!', '#e74c3c');
+                    return;
+                }
+                
+                // Create a text representation of the table
+                let tableText = 'Performance\tAvg. Price\tMarket Value\tAdvantage\tAdvantage %\n';
+                
+                for (let i = 0; i < tableBody.rows.length; i++) {
+                    const row = tableBody.rows[i];
+                    const cells = row.cells;
+                    
+                    // Extract text from each cell and remove the units
+                    const rowData = [
+                        cells[0].textContent.replace('%', ''),
+                        cells[1].textContent.replace('€', ''),
+                        cells[2].textContent,
+                        cells[3].textContent,
+                        cells[4].textContent.replace('%', '')
+                    ];
+                    
+                    tableText += rowData.join('\t') + '\n';
+                }
+                
+                // Create a temporary textarea to copy the text
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = tableText;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+                
+                showNotification('Table data copied to clipboard!');
+            }
+            
+            function clearResults() {
+                extractedText.value = '';
+                specialExtractedText.value = '';
+                tableBody.innerHTML = '';
+                debugInfo.style.display = 'none';
+                fileList.style.display = 'none';
+                const fileItems = fileList.querySelectorAll('.file-item');
+                fileItems.forEach(item => item.remove());
+                imageInput.value = '';
+                showNotification('Results cleared!');
+            }
+            
+            function showNotification(message, color = '#2ecc71') {
+                notification.textContent = message;
+                notification.style.backgroundColor = color;
+                notification.style.display = 'block';
+                
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
